@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import client_server
+from manager import Manager
 from database import Database as db
 
 
 def remove_batch(a, b):
-    client_server.SSManager.remove_ports(range(a, b + 1))
+    Manager.remove_ports(range(a, b + 1))
 
 
 def add_batch(a, b):
@@ -14,14 +14,14 @@ def add_batch(a, b):
     # aim_accounts = {}
     for i in range(a, b+1):
         aim_accounts.update({i: 'asdfasdfasdfasdfasdfasdf'})
-    return client_server.SSManager.add_ports(aim_accounts)
+    return Manager.add_ports(aim_accounts)
 
 
 def update_batch(a, b):
     aim_accounts = {1080: 'adsfadfs'}
     for i in range(a, b+1):
         aim_accounts.update({i: 'asdfasdf'})
-    return client_server.SSManager.update_ports(aim_accounts)
+    return Manager.update_ports(aim_accounts)
 
 
 def update_used_traffic():

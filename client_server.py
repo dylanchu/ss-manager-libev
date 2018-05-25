@@ -41,13 +41,13 @@ class SSManager:
         self._traffics_to_log = {}
         self._traffic_sync_n = 0
         # fetch serving ports before ssman start
-        ports_failed = self.remove_ports(Manager.get_working_ports())
+        ports_failed = Manager.remove_ports(Manager.get_working_ports())
         if ports_failed is not None:
             for p in ports_failed:
                 self._ports_working.update({p: None})
 
         ports_enabled = db.get_enabled_ports()
-        ports_failed = self.add_ports(ports_enabled)
+        ports_failed = Manager.add_ports(ports_enabled)
 
         # and store the passwords for later sync passwords
         self._ports_working.update(ports_enabled)
@@ -57,81 +57,6 @@ class SSManager:
                     del self._ports_working[p]
         logging.info('Initial working ports: %s' % list(self._ports_working))
         logging.warning('Initialization done.')
-
-    @classmethod
-    def add_ports(cls, aim_ports):
-        """aim_ports: dict, like {8001:'aaaa', 8002:'bbbb'}
-        return: None or list, of failed ports like [8001, 8002]
-        """
-        if not aim_ports:
-            return
-        ports_retry = {}
-        for p in aim_ports:
-            result = Manager.add_port(p, aim_ports[p])
-            time.sleep(0.01)
-            # print('%d %s' % (p, result))
-            if result == b'ok':
-                logging.debug('Added:  P[%d]' % p)
-            else:
-                ports_retry.update({p: aim_ports[p]})
-        for i in (1, 2, 3):
-            if ports_retry:
-                ports_temp = ports_retry.copy()    # need .copy()
-                logging.warning('Retry %d: Add Another %d Ports' % (i, len(ports_retry)))
-                for p in ports_temp:
-                    result = Manager.add_port(p, ports_temp[p])
-                    if result == b'ok':
-                        logging.debug('Added:  P[%d]' % p)
-                        del ports_retry[p]
-                    elif i == 3:
-                        logging.error('Add:   P[%d] FAILED -> "%s"' % (p, str(result, encoding='utf-8')))
-            else:
-                break
-        else:
-            if ports_retry:
-                logging.error('After 3 Retries: Still %d ports failed to be added' % len(ports_retry))
-                logging.error('Failed ports are: %s' % list(ports_retry))
-                return list(ports_retry)
-
-    @classmethod
-    def remove_ports(cls, aim_ports):
-        """aim_ports: list, like [8001, 8002]
-        return: None or list, like [8001, 8002]
-        """
-        if not aim_ports:
-            return
-        ports_retry = []
-        for p in aim_ports:
-            result = Manager.remove_port(p)
-            # print('%d %s' % (p, result))
-            if result == b'ok':
-                logging.debug('Removed:  P[%d]' % p)
-            else:
-                ports_retry.append(p)
-        if ports_retry:
-            # retry: only retry one time
-            ports_failed = []
-            logging.warning('Retry: Remove Another %d Ports' % len(ports_retry))
-            for p in ports_retry:
-                result = Manager.remove_port(p)
-                if result == b'ok':
-                    logging.debug('Removed:  P[%d]' % p)
-                else:
-                    ports_failed.append(p)
-                    logging.error('Remove:   P[%d] FAILED -> "%s"' % (p, str(result, encoding='utf-8')))
-            else:
-                if ports_failed:
-                    logging.error('After Retry: Still %d ports failed to be removed' % len(ports_failed))
-                    logging.error('Failed ports are: %s' % ports_failed)
-                    return ports_failed
-
-    @classmethod
-    def update_ports(cls, aim_ports):
-        """aim_ports: dict, like {8001:'aaaa', 8002:'bbbb'}
-        return: None or list, of failed ports like [8001, 8002]
-        """
-        cls.remove_ports(list(aim_ports))
-        return cls.add_ports(aim_ports)
 
     def sync_ports(self):
         """sslibev should only be managed by this single thread, then right ports
@@ -166,8 +91,9 @@ class SSManager:
                 ports_to_remove.append(p)
         if ports_to_remove:
             logging.info('Sync: Will Remove P%s' % ports_to_remove)
-            ports_failed = self.remove_ports(ports_to_remove)
+            ports_failed = Manager.remove_ports(ports_to_remove)
             if ports_failed is None:    # better than try
+                logging.info('Sync: Ports Removed')
                 for p in ports_to_remove:
                     del self._ports_working[p]
             else:
@@ -176,27 +102,31 @@ class SSManager:
                         del self._ports_working[p]
         if ports_to_update:
             logging.info('Sync: Will Update P%s' % list(ports_to_update))
-            ports_failed = self.update_ports(ports_to_update)    # subset of ports_to_update
+            ports_failed = Manager.update_ports(ports_to_update)    # subset of ports_to_update
             # then handle _ports_working:
             self._ports_working.update(ports_to_update)
-            if ports_failed is not None:
+            if ports_failed is None:
+                logging.info('Sync: Ports Updated')
+            else:
                 for p in ports_failed:
                     del self._ports_working[p]
         if ports_to_add:
             logging.info('Sync: Will Add    P%s' % list(ports_to_add))
-            ports_failed = self.add_ports(ports_to_add)    # subset of ports_to_add
+            ports_failed = Manager.add_ports(ports_to_add)    # subset of ports_to_add
             # then handle _ports_working:
             self._ports_working.update(ports_to_add)
             if ports_failed is not None:
                 for p in ports_failed:
                     del self._ports_working[p]
+            else:
+                logging.info('Sync: Ports Added')
         del ports_to_add, ports_to_remove, ports_to_update, ports_enabled, old_ports_list
 
     def sync_traffics(self):
         logging.debug('sync traffics...')
         traffics_periodic = {}
         traffics_to_add = {}
-        traffics_read = Manager.get_traffic()
+        traffics_read = Manager.get_traffics()
         for p in traffics_read:
             if p in self._traffics_lasttime:
                 traffics_periodic.update({p: traffics_read[p] - self._traffics_lasttime[p]})
