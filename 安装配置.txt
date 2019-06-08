@@ -1,0 +1,27 @@
+systemctl disable --now shadowsocks-libev
+systemctl status shadowsocks-libev
+
+vim /lib/systemd/system/shadowsocks-libev-manager.service
+
+
+
+
+root@ether01(213.59.123.249):/lib/systemd/system$ cat  shadowsocks-libev-manager.service 
+#  This file is customized ss-libev config for ss-manager-libev.
+
+[Unit]
+Description=Shadowsocks-libev Server Manager Service
+Documentation=man:shadowsocks-libev(8)
+After=network.target
+
+[Service]
+Type=simple
+LimitNOFILE=32768
+ExecStart=/usr/bin/ss-manager -u -m aes-128-cfb --manager-address 127.0.0.1:6001 -s :: -s 0.0.0.0
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+

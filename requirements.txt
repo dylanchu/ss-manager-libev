@@ -1,1 +1,2 @@
+sqlalchemy
 cymysql==0.9.8
