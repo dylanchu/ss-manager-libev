@@ -4,11 +4,12 @@
 # Store configurations
 
 import logging
+import sys
 
-# MANAGER_PORT = 6022
+
 MANAGER_PORT = 6001
 
-DB_HOST = '127.0.0.1'
+DB_HOST = 'db4free.net'
 DB_PORT = 3306
 DB_USER = 'your_username'
 DB_PASSWORD = 'your_password'
@@ -43,3 +44,17 @@ MAIL_FROM = 'your name'
 MAIL_PORT = 465
 MAIL_USER = 'youremail@xxx.com'
 MAIL_PASSWORD = 'your_email_password'
+
+# ------------------
+# Output log is always at stdout while a log file is optional
+logging.basicConfig(format=LOG_FORMAT,
+                    datefmt=LOG_DATE_FORMAT, stream=sys.stdout, level=LOG_LEVEL)
+logger = logging.getLogger()
+console = logging.StreamHandler()
+console.setLevel(LOG_LEVEL)
+logger.addHandler(console)
+if LOGFILE_ENABLE:
+    fileLogger = logging.FileHandler(LOG_FILE)
+    fileLogger.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=LOG_DATE_FORMAT))
+    fileLogger.setLevel(LOG_LEVEL)
+    logger.addHandler(fileLogger)

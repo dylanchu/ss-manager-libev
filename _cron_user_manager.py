@@ -11,18 +11,8 @@ except ImportError:
     print('[ERROR] Please rename `config_example.py` to `config.py` first!')
     sys.exit('config not found')
 
+from config import logger
 from database import Database as db
-import logging
-
-# Log is always at stdout while a log file is optional
-logging.basicConfig(format=config.LOG_FORMAT,
-                    datefmt=config.LOG_DATE_FORMAT, stream=sys.stdout, level=config.LOG_LEVEL)
-if config.LOGFILE_ENABLE:
-    logger = logging.getLogger()
-    fileLogger = logging.FileHandler(config.LOG_FILE)
-    fileLogger.setFormatter(logging.Formatter(config.LOG_FORMAT, datefmt=config.LOG_DATE_FORMAT))
-    fileLogger.setLevel(config.LOG_LEVEL)
-    logger.addHandler(fileLogger)
 
 
 def check_users():
@@ -33,22 +23,22 @@ def check_users():
     users_to_disable = []
     users_to_enable = []
     reasons = {-1: 'User Level < 0', -2: 'Bandwidth Exceeded', -3: 'Expired'}
-    for u in all_users:
+    for uid, email, ss_port, ss_enabled, level, traffic_up, traffic_down, traffic_quota, plan_end_time in all_users:
         # 0     1        2        3       4           5             6             7
-        # id,ss_port,ss_enabled,level,traffic_up,traffic_down,traffic_enabled,plan_end_time
-        qualified = 1
-        if u[3] < 0:
-            qualified = -1
-        elif u[4] + u[5] > u[6]:
-            qualified = -2
-        elif u[7] < time_now:
-            qualified = -3
-        if u[2] and qualified < 0:
-            users_to_disable.append(u[0])
-            logging.info('U[%d] P[%d] will be disabled: %s' % (u[0], u[1], reasons[qualified]))
-        elif not u[2] and qualified == 1:
-            users_to_enable.append(u[0])
-            logging.info('U[%d] P[%d] will be enabled' % (u[0], u[1]))
+        # id,ss_port,ss_enabled,level,traffic_up,traffic_down,traffic_quota,plan_end_time
+        status = 1  # normal
+        if level < 0:
+            status = -1
+        elif traffic_up + traffic_down >= traffic_quota:
+            status = -2
+        elif plan_end_time < time_now:
+            status = -3
+        if ss_enabled and status < 0:
+            users_to_disable.append(uid)
+            logger.info('U[%d] P[%d] will be disabled: %s. Email[%s]' % (uid, ss_port, reasons[status], email))
+        elif not ss_enabled and status == 1:
+            users_to_enable.append(uid)
+            logger.info('U[%d] P[%d] will be enabled. Email[%s]' % (uid, ss_port, email))
     db.disable_user(users_to_disable)
     db.enable_user(users_to_enable)
 

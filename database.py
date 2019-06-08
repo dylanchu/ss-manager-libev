@@ -5,25 +5,29 @@
 import datetime
 import cymysql
 import config
+from config import logger
 
 
 class Database:
     @staticmethod
     def query(sql):
-        conn = cymysql.connect(host=config.DB_HOST, port=config.DB_PORT, user=config.DB_USER, passwd=config.DB_PASSWORD,
-                               db=config.DB_NAME, charset='utf8')
-        cur = conn.cursor()
-        cur.execute(sql)
-        result = cur.fetchall()
-        cur.close()
-        conn.commit()
-        conn.close()
-        return result
+        try:
+            conn = cymysql.connect(host=config.DB_HOST, port=config.DB_PORT, user=config.DB_USER, passwd=config.DB_PASSWORD,
+                                   db=config.DB_NAME, charset='utf8')
+            cur = conn.cursor()
+            cur.execute(sql)
+            result = cur.fetchall()
+            cur.close()
+            conn.commit()
+            conn.close()
+            return result
+        except Exception as e:
+            logger.error(e)
 
     @classmethod
     def get_all_users(cls):
-        sql = 'SELECT id,ss_port,ss_enabled,level,traffic_up,traffic_down,' \
-              'traffic_enabled,plan_end_time FROM db_user;'
+        sql = 'SELECT id,email,ss_port,ss_enabled,level,traffic_up,traffic_down,' \
+              'traffic_quota,plan_end_time FROM db_user;'
         return cls.query(sql)
 
     @classmethod
@@ -33,8 +37,11 @@ class Database:
         result = {}
         sql = 'SELECT ss_port,ss_passwd FROM db_user WHERE ss_enabled=1;'
         temp = cls.query(sql)
-        for t in temp:
-            result.update({t[0]: t[1]})
+        logger.debug('get enabled ports from db:')
+        logger.debug(temp)
+        for port, pwd in temp:
+            if port:
+                result.update({port: pwd})
         # for i in range(8001, 8006):    # only for test
         #    result.update({i: 'asdfasdfasdfasdfasdfasdf'})
         return result

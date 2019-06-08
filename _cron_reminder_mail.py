@@ -60,24 +60,24 @@ def main():
     var_today = datetime.date.today()
     print('===================================================  now: %s' % var_now)
 
-    for u in db.get_users_reminder_mail():
+    for name, email, plan, expire in db.get_users_reminder_mail():
         #        0        1        2           3
         #    user_name, email, plan_type, plan_end_time
-        if not u[2] == 'free':
-            diff = u[3].date() - var_today
+        if not plan == 'free':
+            diff = expire.date() - var_today
             diff_days = diff.total_seconds() / 86400
             if diff_days == 2:
-                print('\n2天后到期 (user_name: %s) 将发送提醒邮件到 %s ...' % (u[0], u[1]))
-                content = template.format(user=u[0], plan_type=u[2],
-                                          end_time=u[3].strftime('%Y-%m-%d %H:%M'), now=var_nowf)
+                print('\n2天后到期 (user_name: %s) 将发送提醒邮件到 %s ...' % (name, email))
+                content = template.format(user=name, plan_type=plan,
+                                          end_time=expire.strftime('%Y-%m-%d %H:%M'), now=var_nowf)
                 # send e-mail and make a copy to myself
-                mailto(u[1], '到期提醒', content)
-                content2 = template2.format(user=u[0], mailaddr=u[1], plan_type=u[2],
-                                            end_time=u[3].strftime('%Y-%m-%d %H:%M'), now=var_nowf)
+                mailto(email, '到期提醒', content)
+                content2 = template2.format(user=name, mailaddr=email, plan_type=plan,
+                                            end_time=expire.strftime('%Y-%m-%d %H:%M'), now=var_nowf)
                 mailto('support@exmail.peanut.ga', '自我备注：到期提醒', content2)
                 print('\n')
             else:
-                print('%d days  (user_name: %s)' % (diff_days, u[0]))
+                print('%d days  (user_name: %s)' % (diff_days, name))
 
 
 if __name__ == '__main__':

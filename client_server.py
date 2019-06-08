@@ -11,20 +11,10 @@ except ImportError:
     print('[ERROR] Please rename `config_example.py` to `config.py` first!')
     sys.exit('config not found')
 
+from config import logger
 from manager import Manager
 from database import Database as db
-import logging
 import time
-
-# Output log is always at stdout while a log file is optional
-logging.basicConfig(format=config.LOG_FORMAT,
-                    datefmt=config.LOG_DATE_FORMAT, stream=sys.stdout, level=config.LOG_LEVEL)
-if config.LOGFILE_ENABLE:
-    logger = logging.getLogger()
-    fileLogger = logging.FileHandler(config.LOG_FILE)
-    fileLogger.setFormatter(logging.Formatter(config.LOG_FORMAT, datefmt=config.LOG_DATE_FORMAT))
-    fileLogger.setLevel(config.LOG_LEVEL)
-    logger.addHandler(fileLogger)
 
 
 class SSManager:
@@ -35,7 +25,7 @@ class SSManager:
         started after that. Then there will be a password update problem.
         A solution is: remove all and add enabled, store _ports_working for passwords update
         """
-        logging.warning('Start Ssman for ss-libev, now initializing...')
+        logger.warning('Start Ssman for ss-libev, now initializing...')
         self._ports_working = {}
         self._traffics_lasttime = {}
         self._traffics_to_log = {}
@@ -55,8 +45,8 @@ class SSManager:
             for p in ports_failed:
                 if p in self._ports_working:
                     del self._ports_working[p]
-        logging.info('Initial working ports: %s' % list(self._ports_working))
-        logging.warning('Initialization done.')
+        logger.info('Initial working ports: %s' % list(self._ports_working))
+        logger.warning('Initialization done.')
 
     def sync_ports(self):
         """sslibev should only be managed by this single thread, then right ports
@@ -65,7 +55,7 @@ class SSManager:
         you kill the process manually, if will not be corrected as sslibev cannot
         detect that. Direct manually password change wont be corrected.
         """
-        logging.debug('sync ports...')
+        logger.debug('sync ports...')
         ports_to_add = dict()
         ports_to_update = dict()
         ports_to_remove = list()
@@ -90,10 +80,10 @@ class SSManager:
             if p not in ports_enabled:
                 ports_to_remove.append(p)
         if ports_to_remove:
-            logging.info('Sync: Will Remove P%s' % ports_to_remove)
+            logger.info('Sync: Will Remove P%s' % ports_to_remove)
             ports_failed = Manager.remove_ports(ports_to_remove)
             if ports_failed is None:    # better than try
-                logging.info('Sync: Ports Removed')
+                logger.info('Sync: Ports Removed')
                 for p in ports_to_remove:
                     del self._ports_working[p]
             else:
@@ -101,17 +91,17 @@ class SSManager:
                     if p not in ports_failed:
                         del self._ports_working[p]
         if ports_to_update:
-            logging.info('Sync: Will Update P%s' % list(ports_to_update))
+            logger.info('Sync: Will Update P%s' % list(ports_to_update))
             ports_failed = Manager.update_ports(ports_to_update)    # subset of ports_to_update
             # then handle _ports_working:
             self._ports_working.update(ports_to_update)
             if ports_failed is None:
-                logging.info('Sync: Ports Updated')
+                logger.info('Sync: Ports Updated')
             else:
                 for p in ports_failed:
                     del self._ports_working[p]
         if ports_to_add:
-            logging.info('Sync: Will Add    P%s' % list(ports_to_add))
+            logger.info('Sync: Will Add    P%s' % list(ports_to_add))
             ports_failed = Manager.add_ports(ports_to_add)    # subset of ports_to_add
             # then handle _ports_working:
             self._ports_working.update(ports_to_add)
@@ -119,11 +109,11 @@ class SSManager:
                 for p in ports_failed:
                     del self._ports_working[p]
             else:
-                logging.info('Sync: Ports Added')
+                logger.info('Sync: Ports Added')
         del ports_to_add, ports_to_remove, ports_to_update, ports_enabled, old_ports_list
 
     def sync_traffics(self):
-        logging.debug('sync traffics...')
+        logger.debug('sync traffics...')
         traffics_periodic = {}
         traffics_to_add = {}
         traffics_read = Manager.get_traffics()
