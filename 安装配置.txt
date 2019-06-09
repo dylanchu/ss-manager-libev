@@ -1,27 +1,38 @@
 systemctl disable --now shadowsocks-libev
 systemctl status shadowsocks-libev
 
-vim /lib/systemd/system/shadowsocks-libev-manager.service
+--- 使用supervisor部署 ---
+vim /etc/supervisor/conf.d/ss-manager.conf
+```ini
+[program:ss-manager]
+command = /usr/bin/ss-manager -u -m aes-128-cfb --manager-address 127.0.0.1:6001 -s :: -s 0.0.0.0
+user=root
+autostart = true
+autorestart = true
+stdout_logfile = /var/log/supervisor/ss-libev-manager_stdout.log
+stderr_logfile = /var/log/supervisor/ss-libev-manager_stderr.log
+```
+
+vim /etc/supervisor/conf.d/ssman-minimal.conf
+```ini
+[program:ssman-minimal]
+command = python3 /opt/ssman-minimal/client_server.py
+user=root
+autostart = true
+autorestart = true
+stdout_logfile = /var/log/supervisor/ssman-minimal_stdout.log
+stderr_logfile = /var/log/supervisor/ssman-minimal_stderr.log
+```
+
+supervisorctl reread
+supervisorctl reload
 
 
-
-
-root@ether01(213.59.123.249):/lib/systemd/system$ cat  shadowsocks-libev-manager.service 
-#  This file is customized ss-libev config for ss-manager-libev.
-
-[Unit]
-Description=Shadowsocks-libev Server Manager Service
-Documentation=man:shadowsocks-libev(8)
-After=network.target
-
-[Service]
-Type=simple
-LimitNOFILE=32768
-ExecStart=/usr/bin/ss-manager -u -m aes-128-cfb --manager-address 127.0.0.1:6001 -s :: -s 0.0.0.0
-
-[Install]
-WantedBy=multi-user.target
-
-
-
-
+firewall-cmd --zone=public --add-port=17000-18000/tcp --permanent
+firewall-cmd --zone=public --add-port=17000-18000/udp --permanent
+firewall-cmd --zone=public --add-port=80/tcp --permanent
+firewall-cmd --zone=public --add-port=8000-8200/tcp --permanent
+firewall-cmd --zone=public --add-port=9001/tcp --permanent
+firewall-cmd --zone=public --add-port=22/tcp --permanent
+firewall-cmd --zone=public --add-port=24/tcp --permanent
+systemctl restart firewalld
