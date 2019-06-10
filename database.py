@@ -98,7 +98,7 @@ class Database:
 
     @classmethod
     def get_users_reminder_mail(cls):
-        sql = 'SELECT user_name, email, plan_type, plan_end_time FROM user WHERE ss_enabled=1 AND plan_type!=free'
+        sql = 'SELECT user_name, email, plan_type, plan_end_time FROM db_user WHERE ss_enabled=1 AND plan_type!=free'
         return cls.query(sql)
 
     @classmethod
