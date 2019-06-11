@@ -27,7 +27,7 @@ class Database:
     @classmethod
     def get_all_users(cls):
         sql = 'SELECT id,email,ss_port,ss_enabled,level,traffic_up,traffic_down,' \
-              'traffic_quota,plan_end_time FROM db_user;'
+              'traffic_quota,plan_end_time FROM user;'
         return cls.query(sql)
 
     @classmethod
@@ -35,7 +35,7 @@ class Database:
         """return: dict, like {8001:'aaaa', 8002:'bbbb'}
         """
         result = {}
-        sql = 'SELECT ss_port,ss_passwd FROM db_user WHERE ss_enabled=1;'
+        sql = 'SELECT ss_port,ss_pwd FROM user WHERE ss_enabled=1;'
         temp = cls.query(sql)
         logger.debug('get enabled ports from db:')
         logger.debug(temp)
@@ -53,7 +53,7 @@ class Database:
         """
         if not traffics_to_add:
             return
-        sql1 = "UPDATE db_user SET traffic_down=traffic_down+CASE ss_port"
+        sql1 = "UPDATE user SET traffic_down=traffic_down+CASE ss_port"
         # sql2 = " WHEN 17009 THEN 990 WHEN 17011 THEN 90"
         sql2 = ''
         for p in traffics_to_add:
@@ -72,36 +72,36 @@ class Database:
         # +----+------+---------+----------+---------+
         if not traffics:
             return
-        sql1 = "INSERT INTO db_traffic(ss_port,log_time,traffic) VALUES "
+        sql1 = "INSERT INTO ss_traffic(ss_port,log_time,traffic) VALUES "
         time_now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         sql2 = ''
         for p in traffics:
             sql2 = ''.join([sql2, "(%d,'%s',%d)," % (p, time_now, traffics[p])])
         # Make sql and fill the corresponding user id (better create index on uid)
-        sql = ''.join([sql1, sql2[0:-1], ';UPDATE db_traffic SET uid=(SELECT id FROM db_user '
-                                         'WHERE ss_port=db_traffic.ss_port) WHERE uid IS NULL;'])
+        sql = ''.join([sql1, sql2[0:-1], ';UPDATE ss_traffic SET uid=(SELECT id FROM user '
+                                         'WHERE ss_port=ss_traffic.ss_port) WHERE uid IS NULL;'])
         cls.query(sql)
 
     @classmethod
     def disable_user(cls, ids):
         if not ids:
             return
-        sql = "UPDATE db_user SET ss_enabled=0 WHERE id IN (%s)" % str(ids)[1:-1]
+        sql = "UPDATE user SET ss_enabled=0 WHERE id IN (%s)" % str(ids)[1:-1]
         cls.query(sql)
 
     @classmethod
     def enable_user(cls, ids):
         if not ids:
             return
-        sql = "UPDATE db_user SET ss_enabled=1 WHERE id IN (%s)" % str(ids)[1:-1]
+        sql = "UPDATE user SET ss_enabled=1 WHERE id IN (%s)" % str(ids)[1:-1]
         cls.query(sql)
 
     @classmethod
     def get_users_reminder_mail(cls):
-        sql = 'SELECT user_name, email, plan_type, plan_end_time FROM db_user WHERE ss_enabled=1 AND plan_type!=free'
+        sql = 'SELECT name, email, plan_type, plan_end_time FROM user WHERE ss_enabled=1 AND plan_type!=free'
         return cls.query(sql)
 
     @classmethod
     def reset_traffic_zero(cls):
-        sql = "UPDATE db_user SET traffic_up=0,traffic_down=0 WHERE plan_type!='free';"
+        sql = "UPDATE user SET traffic_up=0,traffic_down=0 WHERE plan_type!='free';"
         cls.query(sql)

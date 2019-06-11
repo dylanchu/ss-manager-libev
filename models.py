@@ -13,16 +13,16 @@ Base = declarative_base()
 
 
 class User(Base):
-    __tablename__ = 'db_user'
+    __tablename__ = 'user'
 
-    uid = Column(Integer, autoincrement=True, primary_key=True)
     note = Column(VARCHAR(128), nullable=True, default=None)
-    user_name = Column(String(32), nullable=False)
+    id = Column(Integer, autoincrement=True, primary_key=True)
+    name = Column(String(32), nullable=False)
     level = Column(SmallInteger, nullable=False, default=0)
     email = Column(VARCHAR(48), nullable=False, unique=True)
     password = Column(VARCHAR(48), nullable=False, default='888888')
     ss_port = Column(Integer, nullable=False, unique=True)
-    ss_passwd = Column(VARCHAR(16), nullable=False)
+    ss_pwd = Column(VARCHAR(16), nullable=False)
     ss_enabled = Column(SMALLINT, nullable=False, default=1)
     ss_method = Column(String(32), nullable=False, default='aes-128-cfb')
     traffic_up = Column(BigInteger, nullable=False, default=0)
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     # 创建session对象:
     session = DBSession()
     # 创建新User对象:
-    new_user = User(user_name='Bob')
+    new_user = User(name='Bob')
     # 添加到session:
     session.add(new_user)
     # 提交即保存到数据库:

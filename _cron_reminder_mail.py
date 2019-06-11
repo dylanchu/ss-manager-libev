@@ -62,12 +62,12 @@ def main():
 
     for name, email, plan, expire in db.get_users_reminder_mail():
         #        0        1        2           3
-        #    user_name, email, plan_type, plan_end_time
+        #       name,   email, plan_type, plan_end_time
         if not plan == 'free':
             diff = expire.date() - var_today
             diff_days = diff.total_seconds() / 86400
             if diff_days == 2:
-                print('\n2天后到期 (user_name: %s) 将发送提醒邮件到 %s ...' % (name, email))
+                print('\n2天后到期 (name: %s) 将发送提醒邮件到 %s ...' % (name, email))
                 content = template.format(user=name, plan_type=plan,
                                           end_time=expire.strftime('%Y-%m-%d %H:%M'), now=var_nowf)
                 # send e-mail and make a copy to myself
@@ -77,7 +77,7 @@ def main():
                 mailto('support@exmail.peanut.ga', '自我备注：到期提醒', content2)
                 print('\n')
             else:
-                print('%d days  (user_name: %s)' % (diff_days, name))
+                print('%d days  (name: %s)' % (diff_days, name))
 
 
 if __name__ == '__main__':
