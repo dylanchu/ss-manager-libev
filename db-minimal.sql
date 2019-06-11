@@ -16,13 +16,13 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `db_traffic`
+-- Table structure for table `ss_traffic`
 --
 
-DROP TABLE IF EXISTS `db_traffic`;
+DROP TABLE IF EXISTS `ss_traffic`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `db_traffic` (
+CREATE TABLE `ss_traffic` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `uid` int(10) unsigned DEFAULT NULL,
   `ss_port` int(6) unsigned NOT NULL,
@@ -34,27 +34,27 @@ CREATE TABLE `db_traffic` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `db_user`
+-- Table structure for table `user`
 --
 
-DROP TABLE IF EXISTS `db_user`;
+DROP TABLE IF EXISTS `user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `db_user` (
+CREATE TABLE `user` (
+  `note` varchar(256) DEFAULT NULL,
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `note` varchar(128) DEFAULT NULL,
-  `user_name` varchar(32) CHARACTER SET utf8mb4 NOT NULL,
+  `name` varchar(32) CHARACTER SET utf8mb4 NOT NULL,
   `level` smallint(6) NOT NULL DEFAULT '0',
   `email` varchar(32) NOT NULL,
-  `password` varchar(48) NOT NULL DEFAULT '888888',
-  `ss_port` int(11) DEFAULT NULL,
-  `ss_passwd` varchar(16) NOT NULL,
+  `password` varchar(48) NOT NULL,
+  `ss_port` int(11) NOT NULL,
+  `ss_pwd` varchar(16) NOT NULL,
   `ss_enabled` tinyint(1) NOT NULL DEFAULT '1',
   `ss_method` varchar(32) NOT NULL DEFAULT 'aes-128-cfb',
   `traffic_up` bigint(20) NOT NULL DEFAULT '0',
   `traffic_down` bigint(20) NOT NULL DEFAULT '0',
   `traffic_quota` bigint(20) NOT NULL DEFAULT '0',
-  `last_use_time` datetime NOT NULL DEFAULT '2000-01-01 08:00:00',
+  `last_use_time` datetime NOT NULL DEFAULT '1999-01-01 08:00:00',
   `plan_type` varchar(32) NOT NULL DEFAULT 'free',
   `plan_end_time` datetime NOT NULL DEFAULT '2099-12-31 12:00:00',
   `total_paid` int(11) NOT NULL DEFAULT '0',
